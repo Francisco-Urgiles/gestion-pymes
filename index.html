@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0e0a14">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>Gestión &amp; Co. · Sistema de Gestión</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="css/base.css?v=20261029-v2">
+  <link rel="stylesheet" href="css/restored.css?v=20261029-v2">
+</head>
+<body>
+
+<!-- Loader de Verificación Inicial de Hosting -->
+<div id="hosting-loader">
+  <div class="loader-content">
+    <div class="spinner"></div>
+    <p>Verificando estado del servicio...</p>
+  </div>
+</div>
+
+<div id="topbar">
+  <button id="btn-back" onclick="app.goTo('home')">←</button>
+  <div class="brand" data-config-text="appBrand">Gestión &amp; Co.</div>
+  <div id="page-title"></div>
+  <button id="topbar-search" class="topbar-search-trigger" type="button" onclick="app.search.open()" aria-haspopup="dialog" style="display:none"><span data-icon="search"></span><span>Buscar en el negocio</span><kbd>CTRL K</kbd></button>
+  <button id="btn-logout" class="logout-button" onclick="app.auth.logout()" style="display:none" type="button" title="Cerrar sesión" aria-label="Cerrar sesión">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M14 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h7a2 2 0 0 0 2-2v-3"/>
+      <path d="M10 12h11M18 9l3 3-3 3"/>
+    </svg>
+    <span>Cerrar sesión</span>
+  </button>
+</div>
+
+<div id="app">
+
+  <div id="screen-login" class="screen">
+    <div class="login-shell">
+      <section class="login-card" aria-labelledby="login-heading">
+        <div class="login-mark" aria-hidden="true"><span></span></div>
+
+        <header class="login-heading">
+          <span class="login-eyebrow" data-config-text="appBrand">Gestión &amp; Co.</span>
+          <h1 id="login-heading" data-config-text="loginTitle">Acceso</h1>
+          <p data-config-text="loginSubtitle">Ingresa tus credenciales para continuar</p>
+        </header>
+
+        <form class="login-form" onsubmit="event.preventDefault(); app.auth.login()">
+          <label for="login-user">Usuario</label>
+          <div class="login-field">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M20 21a8 8 0 0 0-16 0M12 13a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z"/>
+            </svg>
+            <input type="text" id="login-user" placeholder="Escribe tu usuario" autocomplete="username" autocapitalize="none" spellcheck="false">
+          </div>
+
+          <label for="login-password">Contraseña</label>
+          <div class="login-field">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="4" y="10" width="16" height="11" rx="3"/>
+              <path d="M8 10V7a4 4 0 0 1 8 0v3"/>
+            </svg>
+            <input type="password" id="login-password" placeholder="Escribe tu contraseña" autocomplete="current-password">
+          </div>
+
+          <button class="btn-submit login-submit" id="btn-login" type="submit">Iniciar Sesión</button>
+        </form>
+
+        <p class="login-security"><span aria-hidden="true"></span> Acceso protegido y sesión temporal</p>
+      </section>
+    </div>
+  </div>
+
+  <div id="screen-home" class="screen">
+    <section class="card" style="margin:16px">
+      <p id="subscription-label" role="status"></p>
+      <button class="btn-sm" data-capability="can_export_backup" onclick="app.subscription.backup()">Descargar respaldo</button>
+      <button class="btn-sm" data-capability="can_manage_users" onclick="app.goTo('usuarios')">Administrar usuarios</button>
+      <button class="btn-sm" data-capability="can_export_analytics" onclick="app.subscription.exportReport()">Exportar informe del mes</button>
+      <details data-capability="can_use_email_reminders"><summary onclick="app.reminders.load()">Recordatorios internos por correo</summary>
+        <p>Al activar se revisan las entregas cada hora. Se envía al correo interno guardado, desde la cuenta propietaria del script.</p>
+        <label>Correo interno<input id="reminder-email" type="email"></label>
+        <label>Zona horaria<input id="reminder-zone" value="America/Guayaquil"></label>
+        <label>Días antes, separados por coma<input id="reminder-days" value="2,1"></label>
+        <label>Hora local desde la que enviar<input id="reminder-hour" type="number" min="0" max="23" value="8"></label>
+        <label><input id="reminder-active" type="checkbox">Activar envíos automáticos</label>
+        <button class="btn-sm" onclick="app.reminders.save()">Guardar configuración</button>
+        <button class="btn-sm" onclick="app.reminders.test()">Enviar prueba al correo guardado</button>
+        <div id="reminder-history"></div>
+      </details>
+      <details data-capability="can_view_audit"><summary onclick="app.subscription.audit()">Historial de auditoría</summary><div id="audit-history"></div></details>
+    </section>
+    <div class="home-hero">
+      <span class="workspace-kicker" data-config-text="workspaceLabel">Centro de gestión</span>
+      <h1 id="hero-client-name">Nombre del negocio</h1>
+      <p id="hero-client-subtitle">Panel de gestión</p>
+    </div>
+
+    <section class="quick-actions-section" aria-labelledby="quick-actions-title">
+      <div class="quick-actions-head">
+        <h2 id="quick-actions-title" data-config-text="quickActionsTitle">Acciones rápidas</h2>
+      </div>
+      <div class="quick-actions-grid">
+        <button class="quick-action" data-capability="can_manage_orders" type="button" onclick="app.ui.openModal('modal-pedido')">
+          <span class="quick-action-icon" data-config-text="orderIcon">📋</span>
+          <span data-config-text="quickNewOrder">Agregar operación</span>
+        </button>
+        <button class="quick-action" data-capability="can_manage_customers" type="button" onclick="app.clientes.nuevo()">
+          <span class="quick-action-icon" data-config-text="customerIcon">👤</span>
+          <span data-config-text="quickNewCustomer">Agregar cliente</span>
+        </button>
+        <button class="quick-action admin-only" data-capability="can_manage_payments" type="button" onclick="app.ui.openModal('modal-pago')">
+          <span class="quick-action-icon" data-config-text="paymentIcon">💳</span>
+          <span data-config-text="quickNewPayment">Registrar pago</span>
+        </button>
+        <button class="quick-action" data-capability="can_view_dashboard" type="button" onclick="app.goTo('entregas')">
+          <span class="quick-action-icon" data-config-text="deliveryIcon">📅</span>
+          <span data-config-text="quickOpenSchedule">Ver agenda</span>
+        </button>
+        <button class="quick-action admin-only" data-capability="can_view_financial_reports" type="button" onclick="app.goTo('reportes')"><span class="quick-action-icon" data-icon="chart"></span><span>Informes y pronóstico</span></button>
+      </div>
+    </section>
+
+ <div class="stats-section admin-only">
+  <div class="section-title-container">
+    <h2 class="stats-main-title" data-config-text="dashboardTitle">Resumen del negocio</h2>
+    <p class="stats-subtitle" data-config-text="dashboardSubtitle">Actividad operativa y financiera en un solo vistazo</p>
+  </div>
+
+  <div class="stats-cards-grid">
+    <div class="stat-mini-card">
+      <div class="stat-card-icon icon-bg-orange">💸</div>
+      <span class="stat-card-lbl" data-config-text="dashboardTotal">Valor total</span>
+      <div class="stat-card-val" id="stat-ingresos-totales">$0.00</div>
+    </div>
+    
+    <div class="stat-mini-card">
+      <div class="stat-card-icon icon-bg-green" data-config-text="orderIcon">📦</div>
+      <span class="stat-card-lbl" data-config-text="activeOrders">Registros en curso</span>
+      <div class="stat-card-val" id="stat-pedidos-activos">0</div>
+    </div>
+
+    <div class="stat-mini-card">
+      <div class="stat-card-icon icon-bg-purple">📉</div>
+      <span class="stat-card-lbl" data-config-text="dashboardOutstanding">Saldo v</span>
+      <div class="stat-card-val" id="stat-deuda-total">$0.00</div>
+    </div>
+  </div>
+
+  <div class="stats-chart-box">
+    <h3 class="chart-box-title" data-config-text="paymentDistribution">📊 Distribución de pagos</h3>
+    
+    <div class="chart-content-layout">
+      <div class="chart-visual-wrapper">
+    <div style="width: 160px; height: 160px; position: relative; display: flex; align-items: center; justify-content: center;">
+        <canvas id="chartDonaNueva" style="position: absolute; inset: 0; z-index: 1;"></canvas>
+        
+        <div id="donut-center-content" style="text-align: center; z-index: 2; pointer-events: none;">
+            <div id="donut-icon" style="font-size: 1.2rem; margin-bottom: 2px;">✅</div>
+            <div id="donut-label" style="font-size: 0.6rem; text-transform: uppercase; color: var(--text-muted); letter-spacing: 1px;">Estado</div>
+            <div id="donut-status-text" style="font-size: 0.85rem; font-weight: 700; color: #fff;">100% SALDADO</div>
+        </div>
+    </div>
+</div>
+
+      <div class="chart-data-table">
+        <div class="data-row row-ingresos">
+          <div class="data-row-info">
+            <span class="data-indicator indicator-collected"></span>
+            <span class="data-label">Cobrado</span>
+          </div>
+          <div class="data-row-metrics">
+            <span class="metric-money" id="tbl-cobrado-val">$0.00</span>
+            <span class="metric-pct" id="tbl-cobrado-pct">0%</span>
+          </div>
+        </div>
+
+        <div class="data-row row-gastos">
+          <div class="data-row-info">
+            <span class="data-indicator indicator-pending"></span>
+            <span class="data-label">Pendiente</span>
+          </div>
+          <div class="data-row-metrics">
+            <span class="metric-money" id="tbl-pendiente-val">$0.00</span>
+            <span class="metric-pct" id="tbl-pendiente-pct">0%</span>
+          </div>
+        </div>
+
+        <div class="data-row row-balance-total">
+          <div class="data-row-info">
+            <span class="data-label-bold" data-config-text="dashboardGenerated">Total registrado</span>
+          </div>
+          <div class="data-row-metrics">
+            <span class="metric-balance-final" id="tbl-total-val">$0.00</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    <div class="section-title" data-config-text="upcomingDeliveries">Agenda · compromisos</div>
+    <div id="home-entregas"><div class="loading"><div class="spinner"></div> Cargando...</div></div>
+
+  </div>
+
+
+  <div id="screen-pedidos" class="screen">
+    <div class="page-header">
+      <h2 data-config-text="ordersTitle">📋 Operaciones</h2>
+      <button class="btn-add" data-config-text="addOrderShort" onclick="app.ui.openModal('modal-pedido')">+ Agregar</button>
+    </div>
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" data-config-placeholder="orderSearch" placeholder="Buscar operación o cliente..." id="search-pedidos" oninput="app.pedidos.render()">
+    </div>
+    <div class="chips">
+      <div class="chip active" onclick="app.ui.setChip(this,'ped','todos')">Todos</div>
+      <div class="chip" data-status="pendiente" onclick="app.ui.setChip(this,'ped','pendiente')">Pendiente</div>
+      <div class="chip" data-status="en_proceso" onclick="app.ui.setChip(this,'ped','en_proceso')">En proceso</div>
+      <div class="chip" data-status="listo" onclick="app.ui.setChip(this,'ped','listo')">Listo</div>
+      <div class="chip" data-status="entregado" onclick="app.ui.setChip(this,'ped','entregado')">Finalizado</div>
+    </div>
+    <div id="lista-pedidos"><div class="loading"><div class="spinner"></div></div></div>
+  </div>
+
+  <div id="screen-clientes" class="screen">
+    <div class="page-header">
+      <h2 data-config-text="customersTitle">👤 Clientes</h2>
+      <button class="btn-add" data-config-text="addCustomerShort" onclick="app.clientes.nuevo()">+ Agregar</button>
+    </div>
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" data-config-placeholder="customerSearch" placeholder="Buscar por nombre o teléfono..." id="search-clientes" oninput="app.clientes.render()">
+    </div>
+    <div id="lista-clientes"><div class="loading"><div class="spinner"></div></div></div>
+  </div>
+
+  <div id="screen-pagos" class="screen">
+    <div class="page-header">
+      <h2 data-config-text="paymentsTitle">💳 Pagos</h2>
+      <button class="btn-add" data-config-text="newInstallment" onclick="app.ui.openModal('modal-pago')">+ Abono</button>
+    </div>
+    <div id="lista-pagos"><div class="loading"><div class="spinner"></div></div></div>
+  </div>
+
+  <div id="screen-entregas" class="screen">
+    <div class="page-header">
+      <h2 data-config-text="scheduleTitle">📅 Agenda</h2>
+    </div>
+    <div id="lista-entregas"><div class="loading"><div class="spinner"></div></div></div>
+  </div>
+
+  <div id="screen-reportes" class="screen admin-only">
+    <div class="page-header"><div><h2>Informes y pronóstico</h2><p class="report-subtitle">Una vista de la actividad de tu negocio</p></div></div>
+    <div class="report-controls">
+      <label>Historial<select id="report-history" onchange="app.reportes.render()"><option value="3">3 meses</option><option value="6" selected>6 meses</option><option value="12">12 meses</option></select></label>
+    </div>
+    <p id="report-warning" class="report-note">Simulación orientativa; no garantiza ventas futuras.</p>
+    <div id="report-metrics" class="report-grid"></div>
+    <div class="report-columns"><section class="report-panel"><h3>Ventas registradas y proyección</h3><div class="report-chart"><canvas id="chart-proyeccion"></canvas><p id="report-chart-empty">Sin datos</p></div></section><section class="report-panel"><h3>Estimación mensual</h3><div id="report-table"></div><p id="report-projected-total"></p></section></div>
+    <section class="report-panel"><div class="page-header"><h3>Salud del negocio</h3><span id="report-health-badge" class="health-badge">Sin datos suficientes</span></div><div id="report-health" class="report-grid"></div><p class="report-note">Indicadores operativos y de cobro. No incluyen costos, gastos ni utilidad.</p></section>
+    <div class="report-columns"><section class="report-panel"><h3>Distribución de cobros</h3><div class="report-chart"><canvas id="chart-salud-cobros"></canvas></div></section><section class="report-panel"><h3>Clientes con mayor valor registrado</h3><div id="report-top-clients"></div><h3 class="report-payment-heading">Puntualidad de pago</h3><div id="report-payment-behavior" class="report-grid"></div></section></div>
+    <details class="report-panel"><summary>Cómo se calcula el pronóstico</summary><p id="forecast-explanation"></p><p>Ventas mensuales de pedidos no cancelados. Se comparan último mes, media móvil, suavizamiento y tendencia lineal con validación temporal. Premium muestra hasta tres meses; los rangos requieren al menos cinco errores retrospectivos por horizonte.</p></details>
+  </div>
+
+  <div id="screen-usuarios" class="screen admin-only">
+    <div class="page-header">
+      <h2>👥 Usuarios</h2>
+      <button class="btn-add" onclick="app.ui.openModal('modal-usuario')">+ Nuevo</button>
+    </div>
+    <div id="lista-usuarios"><div class="loading"><div class="spinner"></div></div></div>
+  </div>
+
+  <div id="screen-suspended" class="screen">
+    <div class="suspended-container">
+      <div class="suspended-icon-box">🚫</div>
+      <h1 class="suspended-title">Página Suspendida</h1>
+      <p id="suspended-msg-text" class="suspended-desc">Esta página web ha sido suspendida temporalmente. Por favor, comunícate con el administrador para restablecer el servicio.</p>
+      <div class="suspended-badge">Servicio Inactivo</div>
+    </div>
+  </div>
+
+</div>
+
+<nav id="bottom-nav">
+  <button class="nav-btn active" id="nav-home" onclick="app.goTo('home')">
+    <span class="ni">🏠</span><span class="nl">Inicio</span>
+  </button>
+  <button class="nav-btn" id="nav-pedidos" onclick="app.goTo('pedidos')">
+    <span class="ni" data-config-text="orderIcon">📋</span><span class="nl" data-config-text="ordersNav">Operaciones</span>
+  </button>
+  <button class="nav-btn" id="nav-clientes" onclick="app.goTo('clientes')">
+    <span class="ni" data-config-text="customerIcon">👤</span><span class="nl" data-config-text="customersNav">Clientes</span>
+  </button>
+  <button class="nav-btn admin-only" id="nav-pagos" onclick="app.goTo('pagos')">
+    <span class="ni" data-config-text="paymentIcon">💳</span><span class="nl" data-config-text="paymentsNav">Pagos</span>
+  </button>
+  <button class="nav-btn" id="nav-entregas" onclick="app.goTo('entregas')">
+    <span class="ni" data-config-text="deliveryIcon">📅</span><span class="nl" data-config-text="scheduleNav">Agenda</span>
+  </button>
+</nav>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<div id="global-search-overlay" class="global-search-overlay" role="dialog" aria-modal="true" aria-labelledby="global-search-title">
+  <div class="global-search-dialog">
+    <h2 id="global-search-title" class="sr-only">Buscar en el negocio</h2>
+    <div class="global-search-bar"><span data-icon="search"></span><input id="global-search-input" type="search" aria-label="Nombre, teléfono o detalle" placeholder="Buscar por nombre, teléfono o detalle..." oninput="app.search.render()"><button type="button" onclick="app.search.close()" aria-label="Cerrar búsqueda"><span data-icon="x"></span></button></div>
+    <div class="global-search-filters"><button type="button" data-search-filter="all" class="active" aria-pressed="true">Todo</button><button type="button" data-search-filter="customers" aria-pressed="false">Clientes</button><button type="button" data-search-filter="orders" aria-pressed="false">Operaciones</button></div>
+    <div id="global-search-results"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-pedido">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="modal-pedido-title" data-config-text="newOrderTitle">Agregar operación</h3>
+      <button class="modal-close" onclick="app.ui.closeModal('modal-pedido')">✕</button>
+    </div>
+    <input type="hidden" id="ped-edit-id">
+    <div class="form-group">
+      <label data-config-text="customerRequired">Cliente *</label>
+      <select id="ped-cliente">
+        <option value="">Seleccionar cliente...</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label data-config-text="orderDescriptionRequired">Detalle de la operación *</label>
+      <textarea id="ped-desc" data-config-placeholder="orderDescription" placeholder="Ej: producto o servicio, cantidad y detalles..."></textarea>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label data-config-text="deliveryDateRequired">Fecha programada *</label>
+        <input type="date" id="ped-fentrega">
+      </div>
+      <div class="form-group">
+        <label>Estado</label>
+        <select id="ped-estado">
+          <option value="pendiente" data-status="pendiente">Pendiente</option>
+          <option value="en_proceso" data-status="en_proceso">En proceso</option>
+          <option value="listo" data-status="listo">Listo</option>
+          <option value="entregado" data-status="entregado">Finalizado</option>
+          <option value="cancelado" data-status="cancelado">Cancelado</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label data-config-text="orderTotalRequired">Total ($) *</label>
+      <input type="number" id="ped-total" placeholder="0.00" inputmode="decimal" step="0.01" min="0">
+    </div>
+    <div class="form-group">
+      <label>Notas adicionales</label>
+      <textarea id="ped-notas" data-config-placeholder="orderNotes" placeholder="Información adicional..."></textarea>
+    </div>
+    <button class="btn-submit" id="btn-guardar-pedido" data-config-text="createOrder" onclick="app.pedidos.guardar()">✓ Guardar operación</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-cliente">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="modal-cliente-title" data-config-text="newCustomerTitle">Nuevo cliente</h3>
+      <button class="modal-close" onclick="app.ui.closeModal('modal-cliente')">✕</button>
+    </div>
+    <input type="hidden" id="cli-edit-id">
+    <div class="form-group">
+      <label data-config-text="customerNameRequired">Nombre o razón social *</label>
+      <input type="text" id="cli-nombre" data-config-placeholder="customerName" placeholder="Persona, empresa o referencia">
+    </div>
+    <div class="form-group">
+      <label data-config-text="customerPhoneLabel">Teléfono o contacto</label>
+      <input type="tel" id="cli-tel" data-config-placeholder="customerPhone" placeholder="09XXXXXXXX" inputmode="numeric" maxlength="16" autocomplete="tel" onblur="this.value = Utils.displayPhone(this.value)">
+      <div class="form-hint">Formato Ecuador: 10 dígitos, 09XXXXXXXX.</div>
+    </div>
+    <div class="form-group">
+      <label data-config-text="customerNotesLabel">Notas del cliente</label>
+      <textarea id="cli-obs" data-config-placeholder="customerNotes" placeholder="Preferencias o información útil..."></textarea>
+    </div>
+    <button class="btn-submit" id="btn-guardar-cliente" data-config-text="saveCustomer" onclick="app.clientes.guardar()">✓ Guardar cliente</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-pago">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 data-config-text="registerInstallmentTitle">Registrar abono</h3>
+      <button class="modal-close" onclick="app.ui.closeModal('modal-pago')">✕</button>
+    </div>
+    <div class="form-group">
+      <label data-config-text="orderRequired">Operación *</label>
+      <select id="pag-pedido">
+        <option value="">Seleccionar operación...</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label data-config-text="paymentAmountRequired">Monto ($) *</label>
+        <input type="number" id="pag-monto" placeholder="0.00" inputmode="decimal" step="0.01" min="0.01">
+      </div>
+      <div class="form-group">
+        <label>Método</label>
+        <select id="pag-metodo">
+          <option value="efectivo">💵 Efectivo</option>
+          <option value="transferencia">🏦 Transferencia</option>
+          <option value="tarjeta">💳 Tarjeta</option>
+          <option value="otro">Otro</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Fecha</label>
+      <input type="date" id="pag-fecha">
+    </div>
+    <div class="form-group">
+      <label>Notas</label>
+      <input type="text" id="pag-notas" placeholder="Referencia u observación del pago">
+    </div>
+    <button class="btn-submit" id="btn-guardar-pago" data-config-text="registerPayment" onclick="app.pagos.guardar()">✓ Registrar pago</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-usuario">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Nuevo Usuario</h3>
+      <button class="modal-close" onclick="app.ui.closeModal('modal-usuario')">✕</button>
+    </div>
+    <div class="form-group">
+      <label>Usuario *</label>
+      <input type="text" id="usu-nombre" placeholder="Nombre de usuario">
+    </div>
+    <div class="form-group">
+      <label>Contraseña *</label>
+      <input type="password" id="usu-pass" placeholder="Contraseña">
+    </div>
+    <div class="form-group">
+      <label>Rol</label>
+      <select id="usu-rol">
+        <option value="employee">Colaborador</option>
+        <option value="admin">Administrador</option>
+      </select>
+    </div>
+    <button class="btn-submit" id="btn-guardar-usuario" onclick="app.usuarios.guardar()">✓ Guardar Usuario</button>
+  </div>
+</div>
+
+<!-- =====================================================
+     SCRIPTS — Orden de carga (dependencias primero)
+     1. Infraestructura: config → hosting → session → store → api → utils
+     2. Módulos UI: router → ui → charts
+     3. Módulos de negocio: home → pedidos → clientes → pagos → entregas
+     4. Auth y usuarios
+     5. main (punto de entrada: conecta todo y arranca)
+===================================================== -->
+<script src="js/config.js?v=20261029-v2"></script>
+<script src="js/hosting.js?v=20261029-v2"></script>
+<script src="js/session.js?v=20261029-v2"></script>
+<script src="js/store.js?v=20261029-v2"></script>
+<script src="js/api.js?v=20261029-v2"></script>
+<script src="js/subscription.js?v=20261029-v2"></script>
+<script src="js/modules/reminders.js?v=20261029-v2"></script>
+<script src="js/utils.js?v=20261029-v2"></script>
+<script src="js/modules/icons.js?v=20261029-v2"></script>
+
+<script src="js/modules/router.js?v=20261029-v2"></script>
+<script src="js/modules/ui.js?v=20261029-v2"></script>
+<script src="js/modules/charts.js?v=20261029-v2"></script>
+<script src="js/modules/search.js?v=20261029-v2"></script>
+<script src="js/modules/reportes.js?v=20261029-v2"></script>
+
+<script src="js/modules/home.js?v=20261029-v2"></script>
+<script src="js/modules/pedidos.js?v=20261029-v2"></script>
+<script src="js/modules/clientes.js?v=20261029-v2"></script>
+<script src="js/modules/pagos.js?v=20261029-v2"></script>
+<script src="js/modules/entregas.js?v=20261029-v2"></script>
+
+<script src="js/usuarios.js?v=20261029-v2"></script>
+<script src="js/main.js?v=20261029-v2"></script>
+
+</body>
+</html>
+
