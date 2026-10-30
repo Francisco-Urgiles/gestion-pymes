@@ -33,7 +33,8 @@ const Entregas = {
         }
 
         const vencidos = sorted.filter(p => p.fecha_entrega < hoy && p.estado !== 'entregado');
-        const proximos = sorted.filter(p => p.fecha_entrega >= hoy || p.estado === 'entregado');
+        const proximos = sorted.filter(p => p.fecha_entrega >= hoy && p.estado !== 'entregado');
+        const finalizados = sorted.filter(p => p.estado === 'entregado').slice().reverse();
 
         let html = '';
         if (vencidos.length) {
@@ -43,6 +44,10 @@ const Entregas = {
         if (proximos.length) {
             html += `<div class="section-title" style="margin-top:${vencidos.length ? '20px' : '0'}">${Utils.escapeHTML(Utils.entityIcon('delivery'))} ${(CONFIG.interface || {}).scheduleTitle || 'Agenda'} · ${Utils.escapeHTML(Utils.entity('delivery', 2))}</div>`;
             html += proximos.map(p => Entregas._card(p, p.fecha_entrega < Utils.dateAdd(hoy, 7) ? 'soon' : '')).join('');
+        }
+        if (finalizados.length) {
+            html += '<div class="section-title" style="margin-top:20px">Compromisos finalizados</div>';
+            html += finalizados.map(p => Entregas._card(p, '')).join('');
         }
         Utils.showEl('lista-entregas', html);
     },
@@ -72,4 +77,3 @@ const Entregas = {
         </div>`;
     }
 };
-
